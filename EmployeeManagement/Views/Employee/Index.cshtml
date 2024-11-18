@@ -1,0 +1,154 @@
+﻿@model List<EmployeeManagement.DAL.Models.Employee>
+
+<style>
+    .dt-search {
+        float: right;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center text-primary">Employee Management</h2>
+
+    <ul class="nav nav-tabs" id="employeeTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="employeeListTab" data-bs-toggle="tab" href="#employeeList" role="tab" aria-controls="employeeList" aria-selected="true">
+                <i class="fas fa-list"></i> Employee List
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="employeeDetailsTab" data-bs-toggle="tab" href="#employeeDetails" role="tab" aria-controls="employeeDetails" aria-selected="false">
+                <i class="fas fa-info-circle"></i> Employee Details
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="addEditTab" data-bs-toggle="tab" href="#addEditEmployee" role="tab" aria-controls="addEditEmployee" aria-selected="false">
+                <i class="fas fa-user-plus"></i> Add/Edit Employee
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-4">
+        <div class="tab-pane fade show active" id="employeeList" role="tabpanel" aria-labelledby="employeeListTab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button class="btn btn-success btn-sm" id="addEmployee">
+                    <i class="fas fa-plus-circle"></i> Add Employee
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="myTable" class="table table-hover table-bordered table-striped align-middle">
+                    <thead class="table-success text-center">
+                        <tr>
+                            <th>Employee Code</th>
+                            <th>Vendor Code</th>
+                            <th>Name</th>
+                            <th>Work Mode</th>
+                            <th>Gender</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var emp in Model)
+                            {
+                                <tr>
+                                    <td class="text-center">@($"E{emp.EmployeeCode:D3}")</td>
+                                    <td class="text-center">@($"V{emp.VendorCode:D2}")</td>
+                                    <td class="text-center">@emp.EmployeeName</td>
+                                    <td class="text-center">@emp.WorkMode</td>
+                                    <td class="text-center">@emp.Gender</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-info btn-sm mx-1 view-detail" data-id="@emp.EmployeeCode">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <button class="btn btn-warning btn-sm mx-1 edit-employee" data-id="@emp.EmployeeCode">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No employees found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="employeeDetails" role="tabpanel" aria-labelledby="employeeDetailsTab">
+            <div id="employeeDetail" class="card border-secondary shadow-sm">
+                <div class="card-body">
+                    <p class="text-muted text-center">Select an employee to view details.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="addEditEmployee" role="tabpanel" aria-labelledby="addEditEmployeeTab">
+            <div id="addEditFormContent"></div>
+            <div class="card border-secondary shadow-sm">
+                <div class="card-body text-center">
+                    <p class="text-muted">Edit an employee OR Add an Employee to Render details here.</p>
+                    <button class="btn btn-success btn-sm" id="addEmployee">
+                        <i class="fas fa-plus-circle"></i> Add Employee
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        let table = new DataTable('#myTable');
+    });
+
+    $(document).on("click", ".view-detail", function () {
+        var empId = $(this).data("id");
+        if (!empId) return;
+
+        $("#employeeDetail").html('<div class="text-center py-5"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+
+        $.ajax({
+            url: '/Employee/GetEmployeeDetail',
+            type: 'GET',
+            data: { id: empId },
+            success: function (html) {
+                $("#employeeDetail").html(html);
+                $('#employeeTabs a[href="#employeeDetails"]').tab('show');
+            },
+            error: function (xhr, status, error) {
+                $("#employeeDetail").html('<p class="text-danger text-center">Failed to load details. Please try again.</p>');
+            }
+        });
+    });
+
+    $(document).on("click", "#addEmployee, .edit-employee", function () {
+        var empId = $(this).data("id") || 0;
+
+        $("#addEditFormContent").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+        $.ajax({
+            url: '/Employee/AddEditEmployee',
+            type: 'GET',
+            data: { id: empId },
+            success: function (html) {
+                if (html) {
+                    $("#addEditFormContent").html(html);
+                    $('#employeeTabs a[href="#addEditEmployee"]').tab('show');
+                } else {
+                    $("#addEditFormContent").html('<p class="text-danger">Failed to load form. No content returned from the server.</p>');
+                }
+            },
+            error: function (xhr, status, error) {
+                $("#addEditFormContent").html('<p class="text-danger">An error occurred while loading the form. Please try again later.</p>');
+            }
+        });
+    });
+</script>

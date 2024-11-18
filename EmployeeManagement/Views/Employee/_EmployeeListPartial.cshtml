@@ -1,0 +1,40 @@
+﻿@model List<EmployeeManagement.DAL.Models.Employee>
+
+<div class="table-responsive">
+    <table class="table table-hover table-bordered table-striped align-middle">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Employee Code</th>
+                <th>Vendor Code</th>
+                <th>Name</th>
+                <th>Work Mode</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody class="text-center">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var emp in Model)
+                {
+                    <tr>
+                        <td class="text-center">@($"E{emp.EmployeeCode:D3}")</td>
+                        <td class="text-center">@($"V{emp.VendorCode:D2}")</td>
+                        <td class="text-center">@emp.EmployeeName</td>
+                        <td >@emp.WorkMode</td>
+                        <td class="text-center">
+                            <button class="btn btn-info btn-sm mx-1 view-detail" data-id="@emp.EmployeeCode">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No employees found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

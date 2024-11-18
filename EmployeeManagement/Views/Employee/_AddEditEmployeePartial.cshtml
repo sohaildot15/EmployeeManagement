@@ -1,0 +1,136 @@
+﻿@model EmployeeManagement.DAL.Models.Employee
+
+@{
+    var isEditMode = Model != null && Model.EmployeeCode > 0;
+}
+
+<h4>@(isEditMode ? "Edit Employee" : "Add Employee")</h4>
+
+@using (Html.BeginForm("AddEditEmployee", "Employee", FormMethod.Post, new { id = "addEditForm" }))
+{
+    if (isEditMode)
+    {
+        @Html.HiddenFor(m => m.EmployeeCode)
+    }
+
+    <div class="form-group mb-3">
+        @Html.LabelFor(m => m.EmployeeName, "Name")
+        @Html.TextBoxFor(m => m.EmployeeName, new { @class = "form-control", required = "required" })
+    </div>
+
+    <div class="form-group mb-3">
+        @Html.LabelFor(m => m.Email, "Email")
+        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", required = "required" })
+    </div>
+
+    <div class="form-group mb-3">
+        <label>Gender</label>
+        <div>
+            <label>
+                @Html.RadioButtonFor(m => m.Gender, "Male", new { id = "Male" }) Male
+            </label>
+            <label>
+                @Html.RadioButtonFor(m => m.Gender, "Female", new { id = "Female" }) Female
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group mb-3">
+        @Html.LabelFor(m => m.WorkMode, "Work Mode")
+        @Html.DropDownListFor(
+            m => m.WorkMode,
+            new SelectList(new[]
+            {
+                new { Value = "", Text = "Select Work Mode" },
+                new { Value = "Onsite", Text = "Onsite" },
+                new { Value = "Remote", Text = "Remote" },
+                new { Value = "Hybrid", Text = "Hybrid" }
+            }, "Value", "Text", Model?.WorkMode),
+            new { @class = "form-control", required = "required" })
+    </div>
+
+    <div class="form-group mb-3">
+        @Html.LabelFor(m => m.VendorCode, "Vendor")
+        @Html.DropDownList("VendorCode", ViewBag.Vendors as SelectList, "Select Vendor", new { @class = "form-control", required = "required" })
+    </div>
+
+    <div class="form-group mb-3">
+        @Html.LabelFor(m => m.StateID, "State")
+        @Html.DropDownList("StateID", ViewBag.States as SelectList, "Select State", new { @class = "form-control", id = "StateID", required = "required" })
+    </div>
+
+    <div class="form-group mb-3">
+        @Html.LabelFor(m => m.CityID, "City")
+        @Html.DropDownList("CityID", ViewBag.Cities as SelectList, "Select City", new { @class = "form-control", id = "CityID", required = "required" })
+    </div>
+
+    <div class="form-group mb-3">
+        @Html.LabelFor(m => m.IsActive, "Status")
+        <div>
+            @Html.CheckBoxFor(m => m.IsActive)
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+}
+
+<div id="formMessage" class="mt-3"></div>
+
+<script>
+    $(document).ready(function () {
+        $("#StateID").change(function () {
+            var stateId = $(this).val();
+            $.ajax({
+                url: '/Employee/GetCitiesByState',
+                type: 'GET',
+                data: { stateId: stateId },
+                success: function (cities) {
+                    var cityDropdown = $("#CityID");
+                    cityDropdown.empty();
+                    cityDropdown.append($('<option>').text("Select City").attr('value', ''));
+                    $.each(cities, function (index, city) {
+                        cityDropdown.append($('<option>').text(city.CityName).attr('value', city.CityID));
+                    });
+
+                    var selectedCityId = $("#CityID").data('selected-city');
+                    if (selectedCityId) {
+                        cityDropdown.val(selectedCityId);
+                    }
+                },
+                error: function () {
+                    alert("Failed to load cities. Please try again.");
+                }
+            });
+        });
+
+        var initialStateId = $("#StateID").val();
+        if (initialStateId) {
+            var initialCityId = $("#CityID").val();
+            $("#CityID").data('selected-city', initialCityId);
+            $("#StateID").trigger('change');
+        }
+
+        $("#addEditForm").submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '/Employee/AddEditEmployee',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        $("#formMessage").html('<div class="alert alert-success">Employee saved successfully!</div>');
+                        setTimeout(function () {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        $("#formMessage").html('<div class="alert alert-danger">Some Fields were left empty.</div>');
+                    }
+                },
+                error: function () {
+                    $("#formMessage").html('<div class="alert alert-danger">An error occurred. Please try again.</div>');
+                }
+            });
+        });
+    });
+</script>
