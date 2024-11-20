@@ -1,4 +1,6 @@
 ﻿using EmployeeManagement.DAL.Models;
+using EmployeeManagement.DAL.Repositories;
+using System;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -8,7 +10,13 @@ namespace EmployeeManagement.Controllers
     {
         public ActionResult Index()
         {
+
             var employees = EmployeeRepo.GetAllEmployees();
+            foreach (var employee in employees)
+            {
+                employee.StateName = StateRepo.GetStateNameById(employee.StateID);
+                employee.CityName = CityRepo.GetCityNameById(employee.StateID);
+            }
             return View(employees);
         }
 
@@ -90,5 +98,40 @@ namespace EmployeeManagement.Controllers
             var cities = CityRepo.GetCitiesByState(stateId);
             return Json(cities.Select(c => new { c.CityID, c.CityName }), JsonRequestBehavior.AllowGet);
         }
+
+        [HttpPost]
+        public ActionResult UpdateTaskStatus(int id, string taskStatus)
+        {
+            try
+            {
+                EmployeeRepo.UpdateTaskStatus(id, taskStatus);
+                return Json(new { success = true, message = "Task status updated successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public ActionResult ApproveTasks(int[] ids)
+        {
+            try
+            {
+                foreach (var id in ids)
+                {
+                    EmployeeRepo.UpdateTaskStatus(id, "Completed");
+                }
+
+                return Json(new { success = true, message = "Selected tasks approved successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+
+
     }
 }

@@ -37,5 +37,6 @@ namespace EmployeeManagement.DAL.Repositories
 
             return vendors;
         }
+
     }
 }

@@ -38,6 +38,7 @@ namespace EmployeeManagement.DAL.Models
         public string StateName { get; set; }
 
         public string CityName { get; set; }
+        public string TaskStatus { get; set; } = "Pending"; // Default value
 
     }
 }

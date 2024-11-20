@@ -20,7 +20,11 @@ namespace EmployeeManagement.DAL.Repositories
 
             using (SqlConnection con = new SqlConnection(_connectionString))
             {
-                SqlCommand cmd = new SqlCommand("SELECT * FROM Employees", con);
+                string query = @"SELECT EmployeeCode, VendorCode, EmployeeName, Email, Gender, WorkMode, StateID, CityID, 
+                         ISNULL(TaskStatus, 'Pending') AS TaskStatus 
+                         FROM Employees";
+
+                SqlCommand cmd = new SqlCommand(query, con);
                 con.Open();
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -34,10 +38,10 @@ namespace EmployeeManagement.DAL.Repositories
                             EmployeeName = reader["EmployeeName"].ToString(),
                             Email = reader["Email"].ToString(),
                             Gender = reader["Gender"].ToString(),
-                            IsActive = (bool)reader["IsActive"],
                             WorkMode = reader["WorkMode"].ToString(),
                             StateID = (int)reader["StateID"],
-                            CityID = (int)reader["CityID"]
+                            CityID = (int)reader["CityID"],
+                            TaskStatus = reader["TaskStatus"].ToString()
                         });
                     }
                 }
@@ -45,6 +49,7 @@ namespace EmployeeManagement.DAL.Repositories
 
             return employees;
         }
+
 
         public void AddEmployee(Employee employee)
         {
@@ -128,6 +133,21 @@ namespace EmployeeManagement.DAL.Repositories
                 cmd.ExecuteNonQuery();
             }
         }
+
+        public void UpdateTaskStatus(int employeeCode, string taskStatus)
+        {
+            using (SqlConnection con = new SqlConnection(_connectionString))
+            {
+                string query = "UPDATE Employees SET TaskStatus = @TaskStatus WHERE EmployeeCode = @EmployeeCode";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@TaskStatus", taskStatus);
+                cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode);
+
+                con.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
         public void DeleteEmployee(int employeeCode)
         {
             using (SqlConnection con = new SqlConnection(_connectionString))
